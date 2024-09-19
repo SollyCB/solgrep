@@ -104,7 +104,6 @@ bool parse(string *str)
 			break;
 		}
 	}
-
 	return true;
 }
 
