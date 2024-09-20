@@ -46,11 +46,34 @@ string test_ptns[] = {
 	{.cstr = ".e.*o",  .len = strlen(".e.*o")},
 	{.cstr = "...*.",  .len = strlen("...*.")},
 	{.cstr = "...*",   .len = strlen("...*")},
+	{.cstr = "he.*llo",   .len = strlen("he.*llo")},
+	{.cstr = "he.+llo",   .len = strlen("he.+llo")},
+
+	{.cstr = "hel{0,0}o",   .len = strlen("hel{0,0}o")},
+	{.cstr = "hel{0,1}o",   .len = strlen("hel{0,1}o")},
+	{.cstr = "hel{1,1}o",   .len = strlen("hel{1,1}o")},
+
+	{.cstr = "hel{0,2}o",   .len = strlen("hel{0,2}o")},
+	{.cstr = "hel{1,2}o",   .len = strlen("hel{1,2}o")},
+	{.cstr = "hel{2,2}o",   .len = strlen("hel{2,2}o")},
+
+	{.cstr = "hel{0,3}o",   .len = strlen("hel{0,3}o")},
+	{.cstr = "hel{1,4}o",   .len = strlen("hel{1,4}o")},
+	{.cstr = "hel{2,5}o",   .len = strlen("hel{2,5}o")},
+
+	{.cstr = "hel{3,3}o",   .len = strlen("hel{3,3}o")},
+	{.cstr = "hel{4,4}o",   .len = strlen("hel{4,4}o")},
+	{.cstr = "hel{5,5}o",   .len = strlen("hel{5,5}o")},
+
+	{.cstr = "hel{0,5}x{0,}o",   .len = strlen("hel{0,5}x{0,}o")},
+	{.cstr = "hel{0,5}x{1,}o",   .len = strlen("hel{0,5}x{1,}o")},
 
 	/* I am actually not sure what is correct for a patterns like these */
+#if 0
 	{.cstr = "...*..",  .len = strlen("...*..")},
 	{.cstr = "...*.o", .len = strlen("...*.o")},
 	{.cstr = "...*...",  .len = strlen("...*...")},
+#endif
 };
 
 string test_strs[] = {
@@ -348,6 +371,7 @@ bool match(string *str, int *pos)
 	for(i=0; i < mtc.min; ++i)
 		if (!set_has(&mtc.set, str->cstr[*pos + i])) {
 			res = false;
+			pr_info("failed min test - string pos was %i, pattern pos was %i", *pos + i, ptn.pos);
 			goto out;
 		}
 	res = true;
@@ -357,18 +381,17 @@ bool match(string *str, int *pos)
 	if ((int)str->len - *pos <= mtc.max)  {
 		*pos += skip(str->cstr + *pos, &mtc.set);
 		res = true;
+		pr_info("passed max test, pos is at %i", *pos);
 		goto out;
 	}
 
 	mtc.max -= i;
 	for(i=0; i < mtc.max; ++i)
-		if (!set_has(&mtc.set, str->cstr[*pos + i])) {
-			*pos += i;
+		if (!set_has(&mtc.set, str->cstr[*pos + i]))
 			res = true;
-			goto out;
-		}
-out:
+	*pos += i;
 	pr_info("passed max test, pos is at %i", *pos);
+out:
 	pr_info("returning %s", res ? "true" : "false");
 	reset_mtc();
 	return res;
@@ -578,6 +601,8 @@ bool parse(string *str)
 			ques();
 			break;
 		case '{':
+			pr_info("curly brace");
+			curl();
 			break;
 		default:
 			pr_info("default");
@@ -634,6 +659,7 @@ void free_ptn(void)
 
 int main() {
 	string_array vp = new_strarr(64, 64, NULL);
+	string_array ip = new_strarr(64, 64, NULL);
 	for(int i=0; i < (int)carrlen(test_ptns); ++i) {
 		if (init_ptn(&test_ptns[i]) < 0)
 			continue;
@@ -641,6 +667,8 @@ int main() {
 			if (parse(&test_strs[j])) {
 				strarr_add(&ptn.fnd, &test_strs[j]);
 				strarr_add(&vp, &test_ptns[i]);
+			} else {
+				strarr_add(&ip, &test_ptns[i]);
 			}
 		free_ptn();
 	}
@@ -648,5 +676,9 @@ int main() {
 	for(int i=0; i < (int)strarr_len(&vp); ++i)
 		print_count_chars_ln(strarr_get(&vp, i).cstr,
 				     strarr_get(&vp, i).len);
+	println("\npatterns that do not match:");
+	for(int i=0; i < (int)strarr_len(&ip); ++i)
+		print_count_chars_ln(strarr_get(&ip, i).cstr,
+				     strarr_get(&ip, i).len);
 	return 0;
 }
