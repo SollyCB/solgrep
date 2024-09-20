@@ -68,6 +68,8 @@ string test_ptns[] = {
 	{.cstr = "hel{0,5}x{0,}o",   .len = strlen("hel{0,5}x{0,}o")},
 	{.cstr = "hel{0,5}x{1,}o",   .len = strlen("hel{0,5}x{1,}o")},
 
+	{.cstr = "hell?x?o",   .len = strlen("hell?x?o")},
+
 	/* I am actually not sure what is correct for a patterns like these */
 #if 0
 	{.cstr = "...*..",  .len = strlen("...*..")},
@@ -525,6 +527,12 @@ fail:
 	return false;
 }
 
+/*
+ * This is missing a lot of invalid cases. But writing code to look for the
+ * many invalid setups that I can parse out with my eyes because I am never
+ * going to be writing insane regex patterns is boring and lame and time
+ * consuming for an unsubstantial benefit.
+ */
 bool valid(void)
 {
 	int i = 0;
